@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "lib",
+    "p9kp",
+]

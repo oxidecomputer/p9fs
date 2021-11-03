@@ -1,0 +1,25 @@
+[package]
+name = "p9kp"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+slog = "2.7"
+slog-term = "2.7"
+slog-async = "2.7"
+slog-envlogger = "2.2"
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = [ "derive" ] }
+serde_repr = "0.1"
+async-recursion = "0.3"
+async-trait = "0.1"
+clap = "3.0.0-beta.5"
+libc = "0.2"
+
+ispf = { git = "ssh://git@github.com/oxidecomputer/ispf" }
+devinfo = { git = "ssh://git@github.com/rcgoodfellow/devinfo-sys" }
+
+p9ds = { path = "../lib" }
+
