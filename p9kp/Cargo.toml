@@ -19,7 +19,7 @@ clap = "3.0.0-beta.5"
 libc = "0.2"
 
 ispf = { git = "ssh://git@github.com/oxidecomputer/ispf" }
-devinfo = { git = "ssh://git@github.com/rcgoodfellow/devinfo-sys" }
+devinfo = { git = "ssh://git@github.com/oxidecomputer/devinfo-sys" }
 
 p9ds = { path = "../lib" }
 

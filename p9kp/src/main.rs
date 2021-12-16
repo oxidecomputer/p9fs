@@ -109,7 +109,7 @@ struct Virtio9pDevice {
 }
 
 fn find_virtfs_dev(_log: &Logger) -> Result<Virtio9pDevice, Box<dyn Error>> {
-    let devices = get_devices()?;
+    let devices = get_devices(false)?;
 
     // look for libvirt/vritfs device
     let vendor_id = 0x1af4;

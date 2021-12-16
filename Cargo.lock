@@ -152,7 +152,7 @@ dependencies = [
 [[package]]
 name = "devinfo"
 version = "0.1.0"
-source = "git+ssh://git@github.com/rcgoodfellow/devinfo-sys#fbab232f5f25a63732e65fb2512acf4a523e7d56"
+source = "git+ssh://git@github.com/oxidecomputer/devinfo-sys#b94c1ccc2b159e06f3e201cda35756d44908a932"
 dependencies = [
  "num_enum",
 ]
