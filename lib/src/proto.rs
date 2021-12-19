@@ -243,6 +243,268 @@ impl Version {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct Tclunk {
+    pub size: u32,
+    pub typ: MessageType,
+    pub tag: u16,
+    pub fid: u32,
+}
+
+impl Tclunk {
+    pub fn new(fid: u32) -> Self {
+        Tclunk {
+            size: (
+                //size
+                size_of::<u32>() +
+                // typ
+                size_of::<u8>() +
+                // tag
+                size_of::<u16>() +
+                // fid
+                size_of::<u32>()
+            ) as u32,
+            typ: MessageType::Tclunk,
+            tag: 0,
+            fid,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct Rclunk {
+    pub size: u32,
+    pub typ: MessageType,
+    pub tag: u16,
+}
+
+impl Rclunk {
+    pub fn new() -> Self {
+        Rclunk {
+            size: (
+                //size
+                size_of::<u32>() +
+                // typ
+                size_of::<u8>() +
+                // tag
+                size_of::<u16>() +
+                // fid
+                size_of::<u32>()
+            ) as u32,
+            typ: MessageType::Tclunk,
+            tag: 0,
+        }
+    }
+}
+
+/*
+size[4] Tgetattr tag[2] fid[4] request_mask[8]
+*/
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct Tgetattr {
+    pub size: u32,
+    pub typ: MessageType,
+    pub tag: u16,
+    pub fid: u32,
+    pub request_mask: u64,
+}
+
+impl Tgetattr {
+    pub fn new(fid: u32, request_mask: u64) -> Self {
+        Tgetattr {
+            size: (
+                //size
+                size_of::<u32>() +
+                // typ
+                size_of::<u8>() +
+                // tag
+                size_of::<u16>() +
+                // fid
+                size_of::<u32>() +
+                // mask
+                size_of::<u64>()
+            ) as u32,
+            typ: MessageType::Tclunk,
+            tag: 0,
+            fid,
+            request_mask,
+        }
+    }
+}
+
+pub const P9_GETATTR_MODE: u64         = 0x00000001;
+pub const P9_GETATTR_NLINK: u64        = 0x00000002;
+pub const P9_GETATTR_UID: u64          = 0x00000004;
+pub const P9_GETATTR_GID: u64          = 0x00000008;
+pub const P9_GETATTR_RDEV: u64         = 0x00000010;
+pub const P9_GETATTR_ATIME: u64        = 0x00000020;
+pub const P9_GETATTR_MTIME: u64        = 0x00000040;
+pub const P9_GETATTR_CTIME: u64        = 0x00000080;
+pub const P9_GETATTR_INO: u64          = 0x00000100;
+pub const P9_GETATTR_SIZE: u64         = 0x00000200;
+pub const P9_GETATTR_BLOCKS: u64       = 0x00000400;
+
+pub const P9_GETATTR_BTIME: u64        = 0x00000800;
+pub const P9_GETATTR_GEN: u64          = 0x00001000;
+pub const P9_GETATTR_DATA_VERSION: u64 = 0x00002000;
+
+pub const P9_GETATTR_BASIC: u64        = 0x000007ff; /* Mask for fields up to BLOCKS */
+pub const P9_GETATTR_ALL: u64          = 0x00003fff; /* Mask for All fields above */
+
+/*
+size[4] Rgetattr 
+    tag[2]
+    valid[8]
+    qid[13]
+    mode[4]
+    uid[4]
+    gid[4]
+    nlink[8]
+    rdev[8]
+    size[8]
+    blksize[8]
+    blocks[8]
+    atime_sec[8]
+    atime_nsec[8]
+    mtime_sec[8]
+    mtime_nsec[8]
+    ctime_sec[8]
+    ctime_nsec[8]
+    btime_sec[8]
+    btime_nsec[8]
+    gen[8]
+    data_version[8]
+*/
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct Rgetattr {
+    pub size: u32,
+    pub typ: MessageType,
+    pub tag: u16,
+    pub valid: u64,
+    pub qid: Qid,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub nlink: u64,
+    pub rdev: u64,
+    pub attrsize: u64,
+    pub blksize: u64,
+    pub blocks: u64,
+    pub atime_sec: u64,
+    pub atime_nsec: u64,
+    pub mtime_sec: u64,
+    pub mtime_nsec: u64,
+    pub ctime_sec: u64,
+    pub ctime_nsec: u64,
+    pub btime_sec: u64,
+    pub btime_nsec: u64,
+    pub gen: u64,
+    pub data_version: u64,
+
+}
+
+impl Rgetattr {
+    pub fn new(
+        valid: u64,
+        qid: Qid,
+        mode: u32,
+        uid: u32,
+        gid: u32,
+        nlink: u64,
+        rdev: u64,
+        attrsize: u64,
+        blksize: u64,
+        blocks: u64,
+        atime_sec: u64,
+        atime_nsec: u64,
+        mtime_sec: u64,
+        mtime_nsec: u64,
+        ctime_sec: u64,
+        ctime_nsec: u64,
+        btime_sec: u64,
+        btime_nsec: u64,
+        gen: u64,
+        data_version: u64,
+    ) -> Self {
+        Rgetattr {
+            size: (
+                // size
+                size_of::<u32>() +
+                // typ
+                size_of::<u8>()  +
+                // tag
+                size_of::<u16>() +
+                //valid
+                size_of::<u64>() +
+                // qid.typ
+                size_of::<QidType>() +
+                // qid.version
+                size_of::<u32>() +
+                // qid.path
+                size_of::<u64>() +
+                //  mode
+                size_of::<u32>() +
+                //  uid
+                size_of::<u32>() +
+                //  gid
+                size_of::<u32>() +
+                //  nlink
+                size_of::<u64>() +
+                //  rdev
+                size_of::<u64>() +
+                //  attrsize
+                size_of::<u64>() +
+                //  blksize
+                size_of::<u64>() +
+                //  blocks
+                size_of::<u64>() +
+                //  atime_sec
+                size_of::<u64>() +
+                //  atime_nsec
+                size_of::<u64>() +
+                //  mtime_sec
+                size_of::<u64>() +
+                //  mtime_nsec
+                size_of::<u64>() +
+                //  ctime_sec
+                size_of::<u64>() +
+                //  ctime_nsec
+                size_of::<u64>() +
+                //  btime_sec
+                size_of::<u64>() +
+                //  btime_nsec
+                size_of::<u64>() +
+                //  gen
+                size_of::<u64>() +
+                //  data_version
+                size_of::<u64>()
+            ) as u32,
+            typ: MessageType::Rattach,
+            tag: 0,
+            valid,
+            qid,
+            mode,
+            uid,
+            gid,
+            nlink,
+            rdev,
+            attrsize,
+            blksize,
+            blocks,
+            atime_sec,
+            atime_nsec,
+            mtime_sec,
+            mtime_nsec,
+            ctime_sec,
+            ctime_nsec,
+            btime_sec,
+            btime_nsec,
+            gen,
+            data_version,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Tattach {
     pub size: u32,
     pub typ: MessageType,
