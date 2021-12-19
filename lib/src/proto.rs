@@ -504,6 +504,120 @@ impl Rgetattr {
     }
 }
 
+/*
+size[4] Tstatfs tag[2] fid[4]
+*/
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct Tstatfs {
+    pub size: u32,
+    pub typ: MessageType,
+    pub tag: u16,
+    pub fid: u32,
+}
+
+impl Tstatfs {
+    pub fn new(fid: u32) -> Self {
+        Tstatfs {
+            size: (
+                //size
+                size_of::<u32>() +
+                // typ
+                size_of::<u8>() +
+                // tag
+                size_of::<u16>() +
+                // fid
+                size_of::<u32>()
+            ) as u32,
+            typ: MessageType::Tstatfs,
+            tag: 0,
+            fid,
+        }
+    }
+}
+
+/*
+size[4] Rstatfs
+    tag[2]
+    type[4]
+    bsize[4]
+    blocks[8]
+    bfree[8]
+    bavail[8]
+    files[8]
+    ffree[8]
+    fsid[8]
+    namelen[4]
+*/
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct Rstatfs {
+    pub size: u32,
+    pub typ: MessageType,
+    pub tag: u16,
+    pub fstype: u32,
+    pub bsize: u32,
+    pub blocks: u64,
+    pub bfree: u64,
+    pub bavail: u64,
+    pub files: u64,
+    pub ffree: u64,
+    pub fsid: u64,
+    pub namelen: u32,
+}
+
+impl Rstatfs {
+    pub fn new(
+        fstype: u32,
+        bsize: u32,
+        blocks: u64,
+        bfree: u64,
+        bavail: u64,
+        files: u64,
+        ffree: u64,
+        fsid: u64,
+        namelen: u32,
+    ) -> Self {
+        Rstatfs {
+            size: (
+                //size
+                size_of::<u32>() +
+                // typ
+                size_of::<u8>() +
+                // tag
+                size_of::<u16>() +
+                // fstype
+                size_of::<u32>() +
+                // bsize
+                size_of::<u32>() +
+                // blocks
+                size_of::<u64>() +
+                // bfree
+                size_of::<u64>() +
+                // bavail
+                size_of::<u64>() +
+                // files
+                size_of::<u64>() +
+                // ffree
+                size_of::<u64>() +
+                // fsid
+                size_of::<u64>() +
+                // namelen
+                size_of::<u32>()
+            ) as u32,
+            typ: MessageType::Rstatfs,
+            tag: 0,
+            fstype,
+            bsize,
+            blocks,
+            bfree,
+            bavail,
+            files,
+            ffree,
+            fsid,
+            namelen,
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Tattach {
     pub size: u32,
