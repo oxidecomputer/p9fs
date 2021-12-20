@@ -286,11 +286,9 @@ impl Rclunk {
                 // typ
                 size_of::<u8>() +
                 // tag
-                size_of::<u16>() +
-                // fid
-                size_of::<u32>()
+                size_of::<u16>()
             ) as u32,
-            typ: MessageType::Tclunk,
+            typ: MessageType::Rclunk,
             tag: 0,
         }
     }
