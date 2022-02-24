@@ -11,4 +11,4 @@ serde = { version = "1", features = [ "derive" ] }
 serde_repr = "0.1"
 thiserror = "1"
 
-ispf = { git = "ssh://git@github.com/oxidecomputer/ispf" }
+ispf = { git = "https://github.com/oxidecomputer/ispf" }
