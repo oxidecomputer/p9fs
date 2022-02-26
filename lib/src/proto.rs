@@ -294,6 +294,12 @@ impl Rclunk {
     }
 }
 
+impl Default for Rclunk {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /*
 size[4] Tgetattr tag[2] fid[4] request_mask[8]
 */
@@ -329,27 +335,27 @@ impl Tgetattr {
     }
 }
 
-pub const P9_GETATTR_MODE: u64         = 0x00000001;
-pub const P9_GETATTR_NLINK: u64        = 0x00000002;
-pub const P9_GETATTR_UID: u64          = 0x00000004;
-pub const P9_GETATTR_GID: u64          = 0x00000008;
-pub const P9_GETATTR_RDEV: u64         = 0x00000010;
-pub const P9_GETATTR_ATIME: u64        = 0x00000020;
-pub const P9_GETATTR_MTIME: u64        = 0x00000040;
-pub const P9_GETATTR_CTIME: u64        = 0x00000080;
-pub const P9_GETATTR_INO: u64          = 0x00000100;
-pub const P9_GETATTR_SIZE: u64         = 0x00000200;
-pub const P9_GETATTR_BLOCKS: u64       = 0x00000400;
+pub const P9_GETATTR_MODE: u64 = 0x00000001;
+pub const P9_GETATTR_NLINK: u64 = 0x00000002;
+pub const P9_GETATTR_UID: u64 = 0x00000004;
+pub const P9_GETATTR_GID: u64 = 0x00000008;
+pub const P9_GETATTR_RDEV: u64 = 0x00000010;
+pub const P9_GETATTR_ATIME: u64 = 0x00000020;
+pub const P9_GETATTR_MTIME: u64 = 0x00000040;
+pub const P9_GETATTR_CTIME: u64 = 0x00000080;
+pub const P9_GETATTR_INO: u64 = 0x00000100;
+pub const P9_GETATTR_SIZE: u64 = 0x00000200;
+pub const P9_GETATTR_BLOCKS: u64 = 0x00000400;
 
-pub const P9_GETATTR_BTIME: u64        = 0x00000800;
-pub const P9_GETATTR_GEN: u64          = 0x00001000;
+pub const P9_GETATTR_BTIME: u64 = 0x00000800;
+pub const P9_GETATTR_GEN: u64 = 0x00001000;
 pub const P9_GETATTR_DATA_VERSION: u64 = 0x00002000;
 
-pub const P9_GETATTR_BASIC: u64        = 0x000007ff; /* Mask for fields up to BLOCKS */
-pub const P9_GETATTR_ALL: u64          = 0x00003fff; /* Mask for All fields above */
+pub const P9_GETATTR_BASIC: u64 = 0x000007ff; /* Mask for fields up to BLOCKS */
+pub const P9_GETATTR_ALL: u64 = 0x00003fff; /* Mask for All fields above */
 
 /*
-size[4] Rgetattr 
+size[4] Rgetattr
     tag[2]
     valid[8]
     qid[13]
@@ -397,10 +403,10 @@ pub struct Rgetattr {
     pub btime_nsec: u64,
     pub gen: u64,
     pub data_version: u64,
-
 }
 
 impl Rgetattr {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         valid: u64,
         qid: Qid,
@@ -563,6 +569,7 @@ pub struct Rstatfs {
 }
 
 impl Rstatfs {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         fstype: u32,
         bsize: u32,

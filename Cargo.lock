@@ -152,7 +152,7 @@ dependencies = [
 [[package]]
 name = "devinfo"
 version = "0.1.0"
-source = "git+ssh://git@github.com/oxidecomputer/devinfo-sys#b94c1ccc2b159e06f3e201cda35756d44908a932"
+source = "git+https://github.com/oxidecomputer/devinfo-sys#b94c1ccc2b159e06f3e201cda35756d44908a932"
 dependencies = [
  "num_enum",
 ]
@@ -235,7 +235,7 @@ dependencies = [
 [[package]]
 name = "ispf"
 version = "0.1.0"
-source = "git+ssh://git@github.com/oxidecomputer/ispf#76a630bafc10a30c5b684dc50547af4ed5986c83"
+source = "git+https://github.com/oxidecomputer/ispf#76a630bafc10a30c5b684dc50547af4ed5986c83"
 dependencies = [
  "serde",
 ]
