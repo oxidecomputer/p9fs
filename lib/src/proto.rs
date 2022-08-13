@@ -1,4 +1,8 @@
-// Copyright 2021 Oxide Computer Company
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// Copyright 2022 Oxide Computer Company
 
 use ispf;
 use ispf::WireSize;
@@ -8,7 +12,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::fmt::{self, Display, Formatter};
 use std::mem::size_of;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 #[repr(u32)]
 pub enum OpenFlags {
     RdOnly,
@@ -16,7 +20,7 @@ pub enum OpenFlags {
     RdWr,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum P9Version {
     V2000,
     V2000U,
@@ -39,6 +43,7 @@ impl P9Version {
     Clone,
     Debug,
     PartialEq,
+    Eq,
     Serialize_repr,
     Deserialize_repr,
     TryFromPrimitive,
@@ -117,6 +122,7 @@ pub trait Message {
 #[derive(
     Debug,
     PartialEq,
+    Eq,
     Serialize_repr,
     Deserialize_repr,
     TryFromPrimitive,
@@ -134,7 +140,7 @@ pub enum QidType {
     File = 0x00,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Partial {
     pub size: u32,
     pub typ: MessageType,
@@ -150,7 +156,7 @@ impl Message for Partial {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Rlerror {
     pub size: u32,
     pub typ: MessageType,
@@ -197,7 +203,7 @@ pub const NO_FID: u32 = !0u32;
 pub const NO_AFID: u32 = !0u32;
 pub const NO_NUNAME: u32 = !0u32;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Version {
     pub size: u32,
     pub typ: MessageType,
@@ -242,7 +248,7 @@ impl Version {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Tclunk {
     pub size: u32,
     pub typ: MessageType,
@@ -270,7 +276,7 @@ impl Tclunk {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Rclunk {
     pub size: u32,
     pub typ: MessageType,
@@ -303,7 +309,7 @@ impl Default for Rclunk {
 /*
 size[4] Tgetattr tag[2] fid[4] request_mask[8]
 */
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Tgetattr {
     pub size: u32,
     pub typ: MessageType,
@@ -378,7 +384,7 @@ size[4] Rgetattr
     gen[8]
     data_version[8]
 */
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Rgetattr {
     pub size: u32,
     pub typ: MessageType,
@@ -511,7 +517,7 @@ impl Rgetattr {
 /*
 size[4] Tstatfs tag[2] fid[4]
 */
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Tstatfs {
     pub size: u32,
     pub typ: MessageType,
@@ -552,7 +558,7 @@ size[4] Rstatfs
     fsid[8]
     namelen[4]
 */
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Rstatfs {
     pub size: u32,
     pub typ: MessageType,
@@ -623,7 +629,7 @@ impl Rstatfs {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Tattach {
     pub size: u32,
     pub typ: MessageType,
@@ -679,7 +685,7 @@ impl Tattach {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Rattach {
     pub size: u32,
     pub typ: MessageType,
@@ -720,20 +726,20 @@ impl Message for Rattach {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Qid {
     pub typ: QidType,
     pub version: u32,
     pub path: u64,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Wname {
     #[serde(with = "ispf::str_lv16")]
     pub value: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Twalk {
     pub size: u32,
     pub typ: MessageType,
@@ -776,7 +782,7 @@ impl Twalk {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Rwalk {
     pub size: u32,
     pub typ: MessageType,
@@ -817,7 +823,7 @@ impl Message for Rwalk {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Tlopen {
     pub size: u32,
     pub typ: MessageType,
@@ -849,7 +855,7 @@ impl Tlopen {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Rlopen {
     pub size: u32,
     pub typ: MessageType,
@@ -894,7 +900,7 @@ impl Message for Rlopen {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Treaddir {
     pub size: u32,
     pub typ: MessageType,
@@ -930,7 +936,7 @@ impl Treaddir {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Rreaddir {
     pub size: u32,
     pub typ: MessageType,
@@ -975,7 +981,7 @@ impl Message for Rreaddir {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Dirent {
     pub qid: Qid,
     pub offset: u64,
@@ -1004,7 +1010,7 @@ impl ispf::WireSize for Dirent {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Tread {
     pub size: u32,
     pub typ: MessageType,
@@ -1040,7 +1046,7 @@ impl Tread {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Rread {
     pub size: u32,
     pub typ: MessageType,

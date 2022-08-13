@@ -8,10 +8,6 @@
 #:   "/work/debug/*",
 #:   "/work/release/*",
 #: ]
-#: access_repos = [
-#:   "oxidecomputer/ispf",
-#:   "oxidecomputer/devinfo-sys",
-#: ]
 #:
 
 set -o errexit
