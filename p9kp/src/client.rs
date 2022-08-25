@@ -14,11 +14,11 @@ use std::error::Error;
 use std::io;
 use std::marker::Sync;
 use std::path::PathBuf;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::{
-    fs::{File, OpenOptions},
-    net::UnixStream,
-};
+use tokio::net::UnixStream;
+
+use std::fs::{File, OpenOptions};
+use std::io::{Read, Write};
+use std::os::unix::fs::OpenOptionsExt;
 
 #[async_trait]
 pub trait Client {
@@ -172,8 +172,7 @@ impl Client for ChardevClient {
                 .read(true)
                 .write(true)
                 .custom_flags(libc::O_EXCL)
-                .open(&self.dev)
-                .await?,
+                .open(&self.dev)?,
         );
         Ok(())
     }
@@ -194,28 +193,19 @@ impl Client for ChardevClient {
         };
 
         let out = to_bytes_le(t)?;
-        file.write_all(out.as_slice()).await?;
+        file.write_all(out.as_slice())?;
 
         trace!(self.log, "message sent");
 
-        let mut msg = Vec::new();
+        let mut buf = [0u8; crate::CHUNK_SIZE as usize];
+        debug!(self.log, "reading data ({})", buf.len());
+        let n = file.read(&mut buf)?;
+        debug!(self.log, "read {} bytes", n);
 
-        loop {
-            // maximum message size of 8 kB
-            let mut buf = [0u8; 8192];
-            debug!(self.log, "waiting for data");
-            let n = file.read(&mut buf).await?;
-            debug!(self.log, "read {} bytes", n);
-            msg.extend_from_slice(&buf[0..n]);
-            if n < 0xF000 {
-                break;
-            }
-        }
-
-        let r: R = match read_msg(msg.as_slice()) {
+        let r: R = match read_msg(buf.as_slice()) {
             Ok(r) => r,
             Err(e) => {
-                trace!(self.log, "{:?}", msg.as_slice());
+                trace!(self.log, "{:?}", buf);
                 return Err(e);
             }
         };

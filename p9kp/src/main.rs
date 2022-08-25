@@ -23,7 +23,7 @@ use std::process::Command;
 
 pub mod client;
 
-const CHUNK_SIZE: u32 = 8192;
+const CHUNK_SIZE: u32 = 65536;
 const MAX_MSG_SIZE: u32 = CHUNK_SIZE - 11;
 
 #[derive(Parser)]
@@ -269,7 +269,7 @@ async fn copydir<C: Client + Send>(
 
             let mut offset = 0;
             loop {
-                let chunk_size = 8192 - 11;
+                let chunk_size = MAX_MSG_SIZE;
                 let readdir = Treaddir::new(newfid, offset, chunk_size);
                 let d = client.send::<Treaddir, Rreaddir>(&readdir).await?;
                 if d.data.is_empty() {
@@ -342,7 +342,7 @@ async fn copyfile<C: Client>(
 
     let mut offset = 0;
     loop {
-        let r = Tread::new(newfid, offset, 8192 - 11 /*mini chunks*/);
+        let r = Tread::new(newfid, offset, MAX_MSG_SIZE);
         let f = client.send::<Tread, Rread>(&r).await?;
         if f.data.is_empty() {
             break;
