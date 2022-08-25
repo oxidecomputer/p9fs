@@ -23,8 +23,7 @@ use std::process::Command;
 
 pub mod client;
 
-const CHUNK_SIZE: u32 = 65536;
-const MAX_MSG_SIZE: u32 = CHUNK_SIZE - 11;
+const HEADER_SPACE: u32 = 11;
 
 #[derive(Parser)]
 #[clap(
@@ -34,6 +33,9 @@ const MAX_MSG_SIZE: u32 = CHUNK_SIZE - 11;
 struct Opts {
     #[clap(subcommand)]
     subcmd: SubCommand,
+
+    #[clap(short, long, default_value_t = 65536)]
+    chunk_size: u32,
 }
 
 #[derive(Parser)]
@@ -71,7 +73,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 }
 
 async fn pull(
-    _opts: &Opts,
+    opts: &Opts,
     p: &Pull,
     log: &Logger,
 ) -> Result<(), Box<dyn Error>> {
@@ -85,13 +87,14 @@ async fn pull(
             );
             info!(log, "using path {}", dev_path);
             let pb = PathBuf::from(dev_path);
-            let mut client = ChardevClient::new(pb, log.clone());
-            run(&mut client, log).await?;
+            let mut client =
+                ChardevClient::new(pb, opts.chunk_size, log.clone());
+            run(opts, &mut client, log).await?;
         }
         Some(ref conn_str) => {
             let pb = PathBuf::from(conn_str);
             let mut client = UnixClient::new(pb, log.clone());
-            run(&mut client, log).await?;
+            run(opts, &mut client, log).await?;
         }
     };
 
@@ -186,11 +189,12 @@ fn do_load_driver(
 }
 
 async fn run<C: Client + Send>(
+    opts: &Opts,
     client: &mut C,
     log: &Logger,
 ) -> Result<(), Box<dyn Error>> {
     let mut ver = Version::new(P9Version::V2000L);
-    ver.msize = CHUNK_SIZE;
+    ver.msize = opts.chunk_size;
     client.send::<Version, Version>(&ver).await?;
 
     let attach = Tattach::new(
@@ -211,8 +215,9 @@ async fn run<C: Client + Send>(
     let mut offset = 0;
     let fid = 2;
     let mut nextfid = 3;
+    let max_msg_size = opts.chunk_size - HEADER_SPACE;
     loop {
-        let readdir = Treaddir::new(2, offset, MAX_MSG_SIZE);
+        let readdir = Treaddir::new(2, offset, max_msg_size);
         let resp = client.send::<Treaddir, Rreaddir>(&readdir).await?;
         if resp.data.is_empty() {
             break;
@@ -220,8 +225,9 @@ async fn run<C: Client + Send>(
         offset += resp.data.len() as u64;
 
         let path = PathBuf::from(".");
-        copydir(client, resp, "".into(), fid, &mut nextfid, log, path).await?;
-        if readdir.size < MAX_MSG_SIZE {
+        copydir(client, opts, resp, "".into(), fid, &mut nextfid, log, path)
+            .await?;
+        if readdir.size < max_msg_size {
             break;
         }
     }
@@ -229,9 +235,11 @@ async fn run<C: Client + Send>(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 #[async_recursion]
 async fn copydir<C: Client + Send>(
     client: &mut C,
+    opts: &Opts,
     readdir: Rreaddir,
     indent: String,
     fid: u32,
@@ -269,7 +277,7 @@ async fn copydir<C: Client + Send>(
 
             let mut offset = 0;
             loop {
-                let chunk_size = MAX_MSG_SIZE;
+                let chunk_size = opts.chunk_size - HEADER_SPACE;
                 let readdir = Treaddir::new(newfid, offset, chunk_size);
                 let d = client.send::<Treaddir, Rreaddir>(&readdir).await?;
                 if d.data.is_empty() {
@@ -283,6 +291,7 @@ async fn copydir<C: Client + Send>(
 
                 copydir(
                     client,
+                    opts,
                     d,
                     format!("  {}", indent),
                     newfid,
@@ -292,13 +301,14 @@ async fn copydir<C: Client + Send>(
                 )
                 .await?;
 
-                if readdir.size < MAX_MSG_SIZE {
+                if readdir.size < chunk_size {
                     break;
                 }
             }
         } else if entry.qid.typ == QidType::File {
             copyfile(
                 entry.name.clone(),
+                opts,
                 client,
                 fid,
                 nextfid,
@@ -313,6 +323,7 @@ async fn copydir<C: Client + Send>(
 
 async fn copyfile<C: Client>(
     name: String,
+    opts: &Opts,
     client: &mut C,
     fid: u32,
     nextfid: &mut u32,
@@ -342,7 +353,7 @@ async fn copyfile<C: Client>(
 
     let mut offset = 0;
     loop {
-        let r = Tread::new(newfid, offset, MAX_MSG_SIZE);
+        let r = Tread::new(newfid, offset, opts.chunk_size - HEADER_SPACE);
         let f = client.send::<Tread, Rread>(&r).await?;
         if f.data.is_empty() {
             break;

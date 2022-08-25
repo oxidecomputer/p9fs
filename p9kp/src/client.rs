@@ -150,15 +150,17 @@ impl Client for UnixClient {
 
 pub struct ChardevClient {
     pub dev: PathBuf,
+    pub chunk_size: u32,
     pub log: Logger,
     file: Option<File>,
 }
 
 impl ChardevClient {
-    pub fn new(dev: PathBuf, log: Logger) -> Self {
+    pub fn new(dev: PathBuf, chunk_size: u32, log: Logger) -> Self {
         ChardevClient {
             dev,
             log,
+            chunk_size,
             file: None,
         }
     }
@@ -197,7 +199,8 @@ impl Client for ChardevClient {
 
         trace!(self.log, "message sent");
 
-        let mut buf = [0u8; crate::CHUNK_SIZE as usize];
+        let mut buf = Vec::new();
+        buf.resize(self.chunk_size as usize, 0);
         debug!(self.log, "reading data ({})", buf.len());
         let n = file.read(&mut buf)?;
         debug!(self.log, "read {} bytes", n);
