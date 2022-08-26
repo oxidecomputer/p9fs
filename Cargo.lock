@@ -136,7 +136,7 @@ dependencies = [
 [[package]]
 name = "devinfo"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/devinfo-sys#adfaad7cb9ae81b1ac5d4798a516a4e841738b7a"
+source = "git+https://github.com/oxidecomputer/devinfo-sys#b1a9fb8533abbae9dd6e78714fe068079227bf74"
 dependencies = [
  "num_enum",
 ]

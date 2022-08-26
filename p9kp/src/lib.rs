@@ -6,7 +6,6 @@
 
 use async_trait::async_trait;
 use ispf::{from_bytes_le, to_bytes_le};
-use libc;
 use p9ds::error::P9Error;
 use p9ds::proto::{Message, Partial, Rlerror};
 use slog::{debug, trace, Logger};

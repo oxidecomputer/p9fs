@@ -25,6 +25,7 @@ pub enum P9Version {
     V2000,
     V2000U,
     V2000L,
+    V2000P4,
 }
 
 impl P9Version {
@@ -34,6 +35,18 @@ impl P9Version {
             Self::V2000 => "9P2000".into(),
             Self::V2000U => "9P2000.U".into(),
             Self::V2000L => "9P2000.L".into(),
+            Self::V2000P4 => "9P2000.P4".into(),
+        }
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s {
+            "9P2000" => Some(Self::V2000),
+            "9P2000.U" => Some(Self::V2000U),
+            "9P2000.L" => Some(Self::V2000L),
+            "9P2000.P4" => Some(Self::V2000P4),
+            _ => None,
         }
     }
 }
@@ -276,6 +289,15 @@ impl Tclunk {
     }
 }
 
+impl Message for Tclunk {
+    fn instance_type(&self) -> MessageType {
+        self.typ
+    }
+    fn message_type() -> MessageType {
+        MessageType::Tclunk
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Rclunk {
     pub size: u32,
@@ -297,6 +319,15 @@ impl Rclunk {
             typ: MessageType::Rclunk,
             tag: 0,
         }
+    }
+}
+
+impl Message for Rclunk {
+    fn instance_type(&self) -> MessageType {
+        self.typ
+    }
+    fn message_type() -> MessageType {
+        MessageType::Rclunk
     }
 }
 
@@ -1082,5 +1113,89 @@ impl Message for Rread {
     }
     fn message_type() -> MessageType {
         MessageType::Rread
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct Twrite {
+    pub size: u32,
+    pub typ: MessageType,
+    pub tag: u16,
+    pub fid: u32,
+    pub offset: u64,
+    #[serde(with = "ispf::vec_lv32")]
+    pub data: Vec<u8>,
+}
+
+impl Twrite {
+    pub fn new(data: Vec<u8>, fid: u32, offset: u64) -> Self {
+        Twrite {
+            size: (
+                // size
+                size_of::<u32>() +
+                // typ
+                size_of::<u8>()  +
+                // tag
+                size_of::<u16>() +
+                // fid
+                size_of::<u32>() +
+                // offset
+                size_of::<u64>() +
+                // data.count
+                size_of::<u32>() +
+                data.len()
+            ) as u32,
+            typ: MessageType::Twrite,
+            tag: 0,
+            fid,
+            offset,
+            data,
+        }
+    }
+}
+
+impl Message for Twrite {
+    fn instance_type(&self) -> MessageType {
+        self.typ
+    }
+    fn message_type() -> MessageType {
+        MessageType::Twrite
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct Rwrite {
+    pub size: u32,
+    pub typ: MessageType,
+    pub tag: u16,
+    pub count: u32,
+}
+
+impl Rwrite {
+    pub fn new(count: u32) -> Self {
+        Rwrite {
+            size: (
+                // size
+                size_of::<u32>() +
+                // typ
+                size_of::<u8>()  +
+                // tag
+                size_of::<u16>() +
+                // fid
+                size_of::<u32>()
+            ) as u32,
+            typ: MessageType::Rwrite,
+            tag: 0,
+            count,
+        }
+    }
+}
+
+impl Message for Rwrite {
+    fn instance_type(&self) -> MessageType {
+        self.typ
+    }
+    fn message_type() -> MessageType {
+        MessageType::Rwrite
     }
 }

@@ -6,22 +6,19 @@
 
 use async_recursion::async_recursion;
 use clap::{AppSettings, Parser};
-use client::{ChardevClient, Client, UnixClient};
 use devinfo::{get_devices, DiPropValue};
 use p9ds::proto::{
     OpenFlags, P9Version, QidType, Rattach, Rlopen, Rread, Rreaddir, Rwalk,
     Tattach, Tlopen, Tread, Treaddir, Twalk, Version, Wname, NO_AFID,
     NO_NUNAME,
 };
+use p9kp::{ChardevClient, Client, UnixClient};
 use slog::{info, Drain, Logger};
 use std::error::Error;
 use std::fs::OpenOptions;
-use std::io::{self, Write};
+use std::io::Write;
 use std::marker::Send;
 use std::path::PathBuf;
-use std::process::Command;
-
-pub mod client;
 
 const HEADER_SPACE: u32 = 11;
 
@@ -41,7 +38,6 @@ struct Opts {
 #[derive(Parser)]
 enum SubCommand {
     Pull(Pull),
-    LoadDriver(LoadDriver),
 }
 
 #[derive(Parser)]
@@ -51,10 +47,6 @@ struct Pull {
     /// use the first virtio filesystem device it can find.
     conn_str: Option<String>,
 }
-
-#[derive(Parser)]
-#[clap(setting = AppSettings::InferSubcommands)]
-struct LoadDriver {}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -68,7 +60,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     match opts.subcmd {
         SubCommand::Pull(ref p) => pull(&opts, p, &log).await,
-        SubCommand::LoadDriver(ref l) => load_driver(&opts, l, &log).await,
     }
 }
 
@@ -79,16 +70,7 @@ async fn pull(
 ) -> Result<(), Box<dyn Error>> {
     match p.conn_str {
         None => {
-            let dev = find_virtfs_dev(log)?;
-            //TODO handle case when it's not pci@0,0
-            let dev_path = format!(
-                "/devices/pci@0,0/{}@{}:9p",
-                dev.device_name, dev.unit_address,
-            );
-            info!(log, "using path {}", dev_path);
-            let pb = PathBuf::from(dev_path);
-            let mut client =
-                ChardevClient::new(pb, opts.chunk_size, log.clone());
+            let mut client = find_virtfs_dev(log).await?;
             run(opts, &mut client, log).await?;
         }
         Some(ref conn_str) => {
@@ -101,29 +83,16 @@ async fn pull(
     Ok(())
 }
 
-async fn load_driver(
-    _opts: &Opts,
-    _l: &LoadDriver,
+async fn find_virtfs_dev(
     log: &Logger,
-) -> Result<(), Box<dyn Error>> {
-    let dev = find_virtfs_dev(log)?;
-    do_load_driver(&dev, log)
-}
-
-struct Virtio9pDevice {
-    device_name: String,
-    unit_address: String,
-}
-
-fn find_virtfs_dev(_log: &Logger) -> Result<Virtio9pDevice, Box<dyn Error>> {
+) -> Result<ChardevClient, Box<dyn Error>> {
     let devices = get_devices(false)?;
 
     // look for libvirt/vritfs device
     let vendor_id = 0x1af4;
     let device_id = 0x1009;
 
-    let mut found = None;
-    for (device_name, dev_info) in devices {
+    for (device_key, dev_info) in devices {
         let vendor_match = match dev_info.props.get("vendor-id") {
             Some(value) => value.matches_int(vendor_id),
             _ => false,
@@ -142,50 +111,33 @@ fn find_virtfs_dev(_log: &Logger) -> Result<Virtio9pDevice, Box<dyn Error>> {
             _ => continue,
         };
         if vendor_match && dev_match {
-            found = Some(Virtio9pDevice {
-                device_name,
-                unit_address,
-            });
-            break;
+            let dev_path = format!(
+                "/devices/pci@0,0/{}@{}:9p",
+                device_key.node_name, unit_address,
+            );
+            info!(log, "trying path {} ...", dev_path);
+            let pb = PathBuf::from(dev_path);
+            let mut client = p9kp::ChardevClient::new(pb, 0x10000, log.clone());
+
+            let mut ver = Version::new(P9Version::V2000L);
+            ver.msize = 0x10000;
+            let server_version =
+                client.send::<Version, Version>(&ver).await.unwrap();
+            if Some(P9Version::V2000L)
+                == P9Version::from_str(&server_version.version)
+            {
+                info!(log, "compatible 9p device found");
+                return Ok(client);
+            } else {
+                info!(
+                    log,
+                    "not a compatible 9p device: {}", server_version.version
+                );
+            }
+            // keep looking ...
         }
     }
-
-    match found {
-        Some(dev) => Ok(dev),
-        None => Err(Box::new(io::Error::new(
-            io::ErrorKind::NotFound,
-            "virtio filesystem device not found",
-        ))),
-    }
-}
-
-fn do_load_driver(
-    dev: &Virtio9pDevice,
-    log: &Logger,
-) -> Result<(), Box<dyn Error>> {
-    info!(log, "loading vio9p for {}", dev.device_name);
-
-    let out = Command::new("rem_drv").args(["vio9p"]).output()?;
-
-    if !out.status.success() {
-        return Err(Box::new(io::Error::new(
-            io::ErrorKind::Other,
-            format!("rem_drv: {:?}", out),
-        )));
-    }
-
-    let out = Command::new("add_drv")
-        .args(["-i", dev.device_name.as_str(), "-v", "vio9p"])
-        .output()?;
-
-    if !out.status.success() {
-        return Err(Box::new(io::Error::new(
-            io::ErrorKind::Other,
-            format!("rem_drv: {:?}", out),
-        )));
-    }
-
-    Ok(())
+    Err("suitable 9pfs device not found".into())
 }
 
 async fn run<C: Client + Send>(

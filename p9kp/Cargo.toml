@@ -20,6 +20,5 @@ libc = "0.2"
 
 ispf = { git = "https://github.com/oxidecomputer/ispf" }
 devinfo = { git = "https://github.com/oxidecomputer/devinfo-sys" }
-
 p9ds = { path = "../lib" }
 
