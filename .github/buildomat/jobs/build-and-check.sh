@@ -9,6 +9,15 @@
 #:   "/work/release/*",
 #: ]
 #:
+#: [[publish]]
+#: series = "p9kp"
+#: name = "p9kp"
+#: from_output = "/work/release/p9kp"
+#:
+#: [[publish]]
+#: series = "p9kp"
+#: name = "p9kp.sha256"
+#: from_output = "/work/release/p9kp.sha256"
 
 set -o errexit
 set -o pipefail
