@@ -29,4 +29,5 @@ for x in debug release
 do
     mkdir -p /work/$x
     cp target/$x/p9kp /work/$x/p9kp
+    sha256sum /work/$x/p9kp > /work/$x/p9kp.sha256
 done
