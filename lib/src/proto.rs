@@ -123,7 +123,7 @@ pub enum MessageType {
 
 impl Display for MessageType {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }
 
@@ -199,7 +199,7 @@ impl Rlerror {
 
 impl Display for Rlerror {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }
 
