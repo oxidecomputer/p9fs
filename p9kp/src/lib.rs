@@ -198,8 +198,7 @@ impl Client for ChardevClient {
 
         trace!(self.log, "message sent");
 
-        let mut buf = Vec::new();
-        buf.resize(self.chunk_size as usize, 0);
+        let mut buf = vec![0; self.chunk_size as usize];
         debug!(self.log, "reading data ({})", buf.len());
         let n = file.read(&mut buf)?;
         debug!(self.log, "read {} bytes", n);

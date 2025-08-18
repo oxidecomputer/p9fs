@@ -82,7 +82,7 @@ pub enum MessageType {
     Treadlink = 22,
     Rreadlink,
     Tgetattr = 24,
-    Rgetatter,
+    Rgetattr,
     Txattrwalk = 30,
     Rxattrwalk,
     Treaddir = 40,
@@ -123,7 +123,7 @@ pub enum MessageType {
 
 impl Display for MessageType {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }
 
@@ -199,7 +199,7 @@ impl Rlerror {
 
 impl Display for Rlerror {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }
 
@@ -364,7 +364,7 @@ impl Tgetattr {
                 // mask
                 size_of::<u64>()
             ) as u32,
-            typ: MessageType::Tclunk,
+            typ: MessageType::Tgetattr,
             tag: 0,
             fid,
             request_mask,
@@ -519,7 +519,7 @@ impl Rgetattr {
                 //  data_version
                 size_of::<u64>()
             ) as u32,
-            typ: MessageType::Rattach,
+            typ: MessageType::Rgetattr,
             tag: 0,
             valid,
             qid,

@@ -189,7 +189,7 @@ async fn run<C: Client + Send>(
 
 #[allow(clippy::too_many_arguments)]
 #[async_recursion]
-async fn copydir<C: Client + Send>(
+async fn copydir<C>(
     client: &mut C,
     opts: &Opts,
     readdir: Rreaddir,
@@ -198,7 +198,10 @@ async fn copydir<C: Client + Send>(
     nextfid: &mut u32,
     log: &Logger,
     path: PathBuf,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), Box<dyn Error>>
+where
+    C: Client + Send,
+{
     for entry in readdir.data {
         let attrs = match entry.qid.typ {
             QidType::Dir => "d",
@@ -245,7 +248,7 @@ async fn copydir<C: Client + Send>(
                     client,
                     opts,
                     d,
-                    format!("  {}", indent),
+                    format!("  {indent}"),
                     newfid,
                     nextfid,
                     log,
