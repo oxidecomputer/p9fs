@@ -8,9 +8,9 @@ use async_recursion::async_recursion;
 use clap::{AppSettings, Parser};
 use devinfo::{get_devices, DiPropValue};
 use p9ds::proto::{
-    OpenFlags, P9Version, QidType, Rattach, Rlopen, Rread, Rreaddir, Rwalk,
-    Tattach, Tlopen, Tread, Treaddir, Twalk, Version, Wname, NO_AFID,
-    NO_NUNAME,
+    OpenFlags, P9Version, QidType, Rattach, Rgetattr, Rlopen, Rread, Rreaddir,
+    Rwalk, Tattach, Tgetattr, Tlopen, Tread, Treaddir, Twalk, Version, Wname,
+    NO_AFID, NO_NUNAME, P9_GETATTR_MODE,
 };
 use p9kp::{ChardevClient, Client, UnixClient};
 use slog::{info, Drain, Logger};
@@ -18,6 +18,7 @@ use std::error::Error;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::marker::Send;
+use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 
 const HEADER_SPACE: u32 = 11;
@@ -299,10 +300,13 @@ async fn copyfile<C: Client>(
     let open = Tlopen::new(newfid, OpenFlags::RdOnly as u32);
     client.send::<Tlopen, Rlopen>(&open).await?;
 
+    let getattr = Tgetattr::new(newfid, P9_GETATTR_MODE);
+    let attr = client.send::<Tgetattr, Rgetattr>(&getattr).await?;
+
     let mut fp = path.clone();
     fp.push(name.clone());
 
-    let mut file = OpenOptions::new().create(true).append(true).open(fp)?;
+    let mut file = OpenOptions::new().create(true).append(true).open(&fp)?;
 
     file.set_len(0)?; //truncate any existing content
 
@@ -317,6 +321,11 @@ async fn copyfile<C: Client>(
 
         file.write_all(f.data.as_slice())?;
     }
+
+    std::fs::set_permissions(
+        &fp,
+        std::fs::Permissions::from_mode(attr.mode & 0o7777),
+    )?;
 
     Ok(())
 }

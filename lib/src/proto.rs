@@ -372,6 +372,16 @@ impl Tgetattr {
     }
 }
 
+impl Message for Tgetattr {
+    fn instance_type(&self) -> MessageType {
+        self.typ
+    }
+
+    fn message_type() -> MessageType {
+        MessageType::Tgetattr
+    }
+}
+
 pub const P9_GETATTR_MODE: u64 = 0x00000001;
 pub const P9_GETATTR_NLINK: u64 = 0x00000002;
 pub const P9_GETATTR_UID: u64 = 0x00000004;
@@ -542,6 +552,16 @@ impl Rgetattr {
             gen,
             data_version,
         }
+    }
+}
+
+impl Message for Rgetattr {
+    fn instance_type(&self) -> MessageType {
+        self.typ
+    }
+
+    fn message_type() -> MessageType {
+        MessageType::Rgetattr
     }
 }
 
